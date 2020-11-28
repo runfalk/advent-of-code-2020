@@ -1,5 +1,6 @@
 use advent_of_code_2020::day1;
 use anyhow::{anyhow, Result};
+use std::path::Path;
 
 fn pad_newlines(answer: String) -> String {
     answer.lines().collect::<Vec<_>>().join("\n   ")
@@ -19,11 +20,18 @@ fn main() -> Result<()> {
         return Err(anyhow!("Not enough arguments"));
     }
 
+    let path: Option<&Path> = if args.len() == 3 {
+        Some(Path::new(&args[2]))
+    } else {
+        None
+    };
+
     #[allow(overlapping_patterns)]
-    let result: (String, Option<String>) = match args[1].parse()? {
-        1 => as_result(day1::main(&args[2..])?),
-        1..=25 => return Err(anyhow!("No implementation for this day yet")),
-        day => return Err(anyhow!("Day {} is not a valid day for advent of code", day)),
+    let result: (String, Option<String>) = match args[1].parse() {
+        Ok(1) => as_result(day1::main(path.unwrap_or(&Path::new("data/day1.txt")))?),
+        Ok(1..=25) => return Err(anyhow!("No implementation for this day yet")),
+        Ok(day) => return Err(anyhow!("Day {} is not a valid day for advent of code", day)),
+        Err(_) => return Err(anyhow!("{:?} is not a valid day", args[1])),
     };
 
     println!("A: {}", pad_newlines(result.0));

@@ -1,6 +1,11 @@
 use anyhow::Result;
+use std::path::Path;
 
-pub fn main(_args: &[String]) -> Result<(usize, Option<usize>)> {
+fn part_a() -> u32 {
+    0
+}
+
+pub fn main(_path: &Path) -> Result<(usize, Option<usize>)> {
     Ok((0, None))
 }
 
@@ -10,7 +15,7 @@ mod tests {
 
     #[test]
     fn test_a() -> Result<()> {
-        assert_eq!(main(&vec!["Hello".to_owned()])?, (0, None));
+        assert_eq!(part_a(), 0);
         Ok(())
     }
 }
