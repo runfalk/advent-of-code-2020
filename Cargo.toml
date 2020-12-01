@@ -10,3 +10,4 @@ publish = false
 
 [dependencies]
 anyhow = "1"
+itertools = "0.9"
