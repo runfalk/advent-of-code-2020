@@ -7,6 +7,9 @@ authors = ["Andreas Runfalk <andreas@runfalk.se>"]
 edition = "2018"
 publish = false
 
+# Always optimize builds (we care about speed, not safety)
+[profile.dev]
+opt-level = 3
 
 [dependencies]
 anyhow = "1"
