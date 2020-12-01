@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use std::path::Path;
 
-use crate::reader::read_lines;
+use crate::reader::read_parsed_lines;
 
 /// Find num_entries in entries that sum to 2020 and return their product
 fn find_product_2020(entries: &[usize], num_entries: usize) -> Result<usize> {
@@ -17,10 +17,7 @@ fn find_product_2020(entries: &[usize], num_entries: usize) -> Result<usize> {
 }
 
 pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
-    let entries = read_lines(path)?
-        .into_iter()
-        .map(|l| Ok(l?.parse()?))
-        .collect::<Result<Vec<_>>>()?;
+    let entries = read_parsed_lines(path)?.collect::<Result<Vec<usize>>>()?;
     Ok((
         find_product_2020(&entries, 2)?,
         Some(find_product_2020(&entries, 3)?),
