@@ -15,7 +15,7 @@ pub fn read_parsed_lines<P, T>(filename: P) -> Result<impl Iterator<Item = Resul
 where
     P: AsRef<Path>,
     T: FromStr,
-    <T as FromStr>::Err: 'static + Send + Sync + std::error::Error,
+    anyhow::Error: From<T::Err>,
 {
     Ok(read_lines(filename)?
         .into_iter()

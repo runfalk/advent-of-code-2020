@@ -1,4 +1,4 @@
-use advent_of_code_2020::day1;
+use advent_of_code_2020::{day1, day2};
 use anyhow::{anyhow, Result};
 use std::path::Path;
 
@@ -29,6 +29,7 @@ fn main() -> Result<()> {
     #[allow(overlapping_patterns)]
     let result: (String, Option<String>) = match args[1].parse() {
         Ok(1) => as_result(day1::main(path.unwrap_or(&Path::new("data/day1.txt")))?),
+        Ok(2) => as_result(day2::main(path.unwrap_or(&Path::new("data/day2.txt")))?),
         Ok(1..=25) => return Err(anyhow!("No implementation for this day yet")),
         Ok(day) => return Err(anyhow!("Day {} is not a valid day for advent of code", day)),
         Err(_) => return Err(anyhow!("{:?} is not a valid day", args[1])),
