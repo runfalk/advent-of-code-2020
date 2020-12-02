@@ -1,15 +1,19 @@
 use anyhow::{anyhow, Error, Result};
+use once_cell::sync::Lazy;
 use regex::Regex;
 use std::path::Path;
 use std::str::FromStr;
 
 use crate::reader::read_parsed_lines;
 
+// Create the row parsing regex once only to save some performance
+static ROW_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d+)-(\d+)\s+([a-z]):\s+(\S+)$").unwrap());
+
 #[derive(Debug)]
 struct Policy {
-    needle: char,
     first: usize,
     second: usize,
+    needle: char,
 }
 
 impl Policy {
@@ -35,15 +39,14 @@ impl FromStr for PolicyWithPassword {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let re = Regex::new(r"^(\d+)-(\d+)\s+([a-z]):\s+(\S+)$")?;
-        let captures = re
+        let captures = ROW_RE
             .captures(s)
             .ok_or(anyhow!("String doesn't match policy with password"))?;
         Ok(Self {
             policy: Policy {
-                needle: captures[3].chars().next().unwrap(),
                 first: captures[1].parse()?,
                 second: captures[2].parse()?,
+                needle: captures[3].chars().next().unwrap(),
             },
             password: captures[4].to_owned(),
         })
