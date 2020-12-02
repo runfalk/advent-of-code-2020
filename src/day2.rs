@@ -10,32 +10,27 @@ use crate::reader::read_parsed_lines;
 static ROW_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d+)-(\d+)\s+([a-z]):\s+(\S+)$").unwrap());
 
 #[derive(Debug)]
-struct Policy {
+struct PasswordEntry {
     first: usize,
     second: usize,
-    needle: char,
-}
-
-impl Policy {
-    fn is_valid_part1(&self, password: &str) -> bool {
-        let num_matches = password.chars().filter(|c| *c == self.needle).count();
-        (self.first..=self.second).contains(&num_matches)
-    }
-
-    fn is_valid_part2(&self, password: &str) -> bool {
-        let first = password.chars().nth(self.first - 1).unwrap();
-        let second = password.chars().nth(self.second - 1).unwrap();
-        (first == self.needle) ^ (second == self.needle)
-    }
-}
-
-#[derive(Debug)]
-struct PolicyWithPassword {
-    policy: Policy,
+    letter: char,
     password: String,
 }
 
-impl FromStr for PolicyWithPassword {
+impl PasswordEntry {
+    fn has_valid_frequency(&self) -> bool {
+        let num_matches = self.password.chars().filter(|c| *c == self.letter).count();
+        (self.first..=self.second).contains(&num_matches)
+    }
+
+    fn has_valid_positions(&self) -> bool {
+        let first = self.password.chars().nth(self.first - 1).unwrap();
+        let second = self.password.chars().nth(self.second - 1).unwrap();
+        (first == self.letter) ^ (second == self.letter)
+    }
+}
+
+impl FromStr for PasswordEntry {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -43,29 +38,19 @@ impl FromStr for PolicyWithPassword {
             .captures(s)
             .ok_or(anyhow!("String doesn't match policy with password"))?;
         Ok(Self {
-            policy: Policy {
-                first: captures[1].parse()?,
-                second: captures[2].parse()?,
-                needle: captures[3].chars().next().unwrap(),
-            },
+            first: captures[1].parse()?,
+            second: captures[2].parse()?,
+            letter: captures[3].chars().next().unwrap(),
             password: captures[4].to_owned(),
         })
     }
 }
 
 pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
-    let entries = read_parsed_lines(path)?.collect::<Result<Vec<PolicyWithPassword>>>()?;
+    let entries = read_parsed_lines(path)?.collect::<Result<Vec<PasswordEntry>>>()?;
     Ok((
-        entries
-            .iter()
-            .filter(|e| e.policy.is_valid_part1(&e.password))
-            .count(),
-        Some(
-            entries
-                .iter()
-                .filter(|e| e.policy.is_valid_part2(&e.password))
-                .count(),
-        ),
+        entries.iter().filter(|e| e.has_valid_frequency()).count(),
+        Some(entries.iter().filter(|e| e.has_valid_positions()).count()),
     ))
 }
 
@@ -75,17 +60,17 @@ mod tests {
 
     #[test]
     fn test_validation() -> Result<()> {
-        let p1 = PolicyWithPassword::from_str("1-3 a: abcde")?;
-        assert!(p1.policy.is_valid_part1(&p1.password));
-        assert!(p1.policy.is_valid_part2(&p1.password));
+        let p1 = PasswordEntry::from_str("1-3 a: abcde")?;
+        assert!(p1.has_valid_frequency());
+        assert!(p1.has_valid_positions());
 
-        let p2 = PolicyWithPassword::from_str("1-3 b: cdefg")?;
-        assert!(!p2.policy.is_valid_part1(&p2.password));
-        assert!(!p2.policy.is_valid_part2(&p2.password));
+        let p2 = PasswordEntry::from_str("1-3 b: cdefg")?;
+        assert!(!p2.has_valid_frequency());
+        assert!(!p2.has_valid_positions());
 
-        let p3 = PolicyWithPassword::from_str("2-9 c: ccccccccc")?;
-        assert!(p3.policy.is_valid_part1(&p3.password));
-        assert!(!p3.policy.is_valid_part2(&p3.password));
+        let p3 = PasswordEntry::from_str("2-9 c: ccccccccc")?;
+        assert!(p3.has_valid_frequency());
+        assert!(!p3.has_valid_positions());
         Ok(())
     }
 }
