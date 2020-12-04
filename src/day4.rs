@@ -1,27 +1,20 @@
-use anyhow::{anyhow, Error, Result};
+use anyhow::Result;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use std::borrow::Borrow;
 use std::collections::HashMap;
-use std::fmt;
-use std::hash::Hash;
 use std::path::Path;
-use std::str::FromStr;
+use thiserror::Error;
 
 use crate::reader::read_lines;
 
-#[derive(Debug)]
-struct KeyError<'a, T: ?Sized> {
-    key: &'a T,
-}
+#[derive(Error, Debug)]
+enum PassportError {
+    #[error("missing field {0:?}")]
+    Missing(String),
 
-impl<'a, T: fmt::Display + ?Sized> fmt::Display for KeyError<'a, T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "No key {}", self.key)
-    }
+    #[error("invalid value {1:?} for field {0:?}")]
+    Invalid(String, String),
 }
-
-impl<'a, T: fmt::Debug + fmt::Display + ?Sized> std::error::Error for KeyError<'a, T> {}
 
 static HEIGHT_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d+)(cm|in)$").unwrap());
 static COLOR_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^#[a-f0-9]{6}$").unwrap());
@@ -29,36 +22,13 @@ static EYE_COLOR_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^(amb|blu|brn|gry|grn|hzl|oth)$").unwrap());
 static PID_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d{9}$").unwrap());
 
-enum Height {
-    Cm(usize),
-    In(usize),
+fn get_field<'a>(map: &'a HashMap<String, String>, key: &str) -> Result<&'a str, PassportError> {
+    map.get(key)
+        .ok_or_else(|| PassportError::Missing(key.to_owned()))
+        .map(String::as_str)
 }
 
-impl FromStr for Height {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let c = HEIGHT_RE.captures(s).ok_or(anyhow!("Invalid height"))?;
-        let num = c[1].parse()?;
-        Ok(match &c[2] {
-            "cm" => Self::Cm(num),
-            "in" => Self::In(num),
-            _ => unreachable!(),
-        })
-    }
-}
-
-fn get_field<'a, 'b, K, V, Q>(
-    map: &'a HashMap<K, V>,
-    key: &'b Q,
-) -> std::result::Result<&'a V, KeyError<'b, Q>>
-where
-    K: Eq + Hash + Borrow<Q>,
-    Q: Eq + Hash + fmt::Display + ?Sized,
-{
-    map.get(key).ok_or_else(|| KeyError { key })
-}
-
-pub fn validate_passport(passport: &HashMap<String, String>) -> Result<()> {
+fn validate_passport(passport: &HashMap<String, String>) -> Result<(), PassportError> {
     // We need to extract the all fields before value validation since part A
     // only requires the field to be present
     let byr = get_field(passport, "byr")?;
@@ -69,34 +39,38 @@ pub fn validate_passport(passport: &HashMap<String, String>) -> Result<()> {
     let ecl = get_field(passport, "ecl")?;
     let pid = get_field(passport, "pid")?;
 
-    if !(1920..=2002).contains(&byr.parse::<usize>()?) {
-        return Err(anyhow!("Invalid byr"));
+    if !(1920..=2002).contains(&byr.parse::<usize>().unwrap_or(0)) {
+        return Err(PassportError::Invalid("byr".to_owned(), byr.into()));
     }
 
-    if !(2010..=2020).contains(&iyr.parse::<usize>()?) {
-        return Err(anyhow!("Invalid iyr"));
+    if !(2010..=2020).contains(&iyr.parse::<usize>().unwrap_or(0)) {
+        return Err(PassportError::Invalid("iyr".to_owned(), iyr.into()));
     }
 
-    if !(2020..=2030).contains(&eyr.parse::<usize>()?) {
-        return Err(anyhow!("Invalid eyr"));
+    if !(2020..=2030).contains(&eyr.parse::<usize>().unwrap_or(0)) {
+        return Err(PassportError::Invalid("eyr".to_owned(), eyr.into()));
     }
 
-    match hgt.parse()? {
-        Height::Cm(150..=193) => (),
-        Height::In(59..=76) => (),
-        _ => return Err(anyhow!("Invalid hgt")),
-    };
+    HEIGHT_RE
+        .captures(hgt)
+        .map(|c| match &c[2] {
+            "cm" if (150..=193).contains(&c[1].parse::<usize>().unwrap_or(0)) => Some(()),
+            "in" if (59..=76).contains(&c[1].parse::<usize>().unwrap_or(0)) => Some(()),
+            _ => None,
+        })
+        .flatten()
+        .ok_or_else(|| PassportError::Invalid("hgt".to_owned(), hgt.into()))?;
 
     if !COLOR_RE.is_match(hcl) {
-        return Err(anyhow!("Invalid hcl"));
+        return Err(PassportError::Invalid("hcl".to_owned(), hcl.into()));
     }
 
     if !EYE_COLOR_RE.is_match(ecl) {
-        return Err(anyhow!("Invalid ecl"));
+        return Err(PassportError::Invalid("ecl".to_owned(), ecl.into()));
     }
 
     if !PID_RE.is_match(pid) {
-        return Err(anyhow!("Invalid pid"));
+        return Err(PassportError::Invalid("pid".to_owned(), pid.into()));
     }
 
     Ok(())
@@ -107,6 +81,7 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
     let re = Regex::new(r"([^: ]+):(\S+)")?;
     let mut passports = Vec::new();
     passports.push(HashMap::new());
+
     for line in read_lines(path)? {
         let line = line?;
         if line == "" {
@@ -128,7 +103,7 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
                 num_valid_a += 1;
                 num_valid_b += 1;
             }
-            Err(e) if !e.is::<KeyError<'_, str>>() => {
+            Err(PassportError::Missing(_)) => {
                 num_valid_a += 1;
             }
             Err(_) => {}
