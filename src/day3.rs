@@ -13,14 +13,6 @@ struct Map {
     trees: HashSet<Coord>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CoordJumps {
-    origin: Coord,
-    x: isize,
-    y: isize,
-    i: isize,
-}
-
 impl Map {
     fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
         let mut width = 0;
@@ -58,38 +50,22 @@ impl Map {
     }
 }
 
-impl CoordJumps {
-    fn new(origin: Coord, x: isize, y: isize) -> Self {
-        Self { origin, x, y, i: 0 }
-    }
-}
-
-impl Iterator for CoordJumps {
-    type Item = Coord;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let output = Some(Coord::new(
-            self.origin.x + self.x * self.i,
-            self.origin.y + self.y * self.i,
-        ));
-        self.i += 1;
-        output
-    }
+fn num_trees_encountered(map: &Map, x_step: isize, y_step: isize) -> usize {
+    (1..)
+        .into_iter()
+        .map(|i| Coord::new(i * x_step, i * y_step))
+        .take_while(|c| map.in_bounds(c))
+        .filter(|c| map.is_tree(c))
+        .count()
 }
 
 pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
     let map = Map::from_path(path)?;
-    let part_a = CoordJumps::new(Coord::origin(), 3, 1)
-        .take_while(|c| map.in_bounds(c))
-        .filter(|c| map.is_tree(c))
-        .count();
+    let part_a = num_trees_encountered(&map, 3, 1);
 
     let mut part_b = part_a;
-    for (r, d) in vec![(1, 1), (5, 1), (7, 1), (1, 2)] {
-        part_b *= CoordJumps::new(Coord::origin(), r, d)
-            .take_while(|c| map.in_bounds(c))
-            .filter(|c| map.is_tree(c))
-            .count();
+    for (x_step, y_step) in vec![(1, 1), (5, 1), (7, 1), (1, 2)] {
+        part_b *= num_trees_encountered(&map, x_step, y_step);
     }
 
     Ok((part_a, Some(part_b)))
