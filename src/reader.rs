@@ -1,8 +1,19 @@
 use anyhow::Result;
+use std::collections::HashMap;
+use std::convert::TryInto;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 use std::str::FromStr;
+
+use crate::coord::Coord;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Grid {
+    pub width: usize,
+    pub height: usize,
+    pub tiles: HashMap<Coord, char>,
+}
 
 pub fn read_lines<P>(filename: P) -> Result<io::Lines<io::BufReader<File>>>
 where
@@ -30,4 +41,27 @@ where
     anyhow::Error: From<T::Err>,
 {
     read_mapped_lines(path, T::from_str)
+}
+
+impl Grid {
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Grid> {
+        let mut width = 0;
+        let mut height = 0;
+        let mut tiles = HashMap::new();
+
+        for (y, line) in read_lines(path)?.enumerate() {
+            // NOTE: This doesn't check if lines have different length
+            width = 0;
+            for (x, c) in line?.chars().enumerate() {
+                tiles.insert(Coord::new(x.try_into()?, y.try_into()?), c);
+                width += 1;
+            }
+            height += 1;
+        }
+        Ok(Self {
+            width,
+            height,
+            tiles,
+        })
+    }
 }
