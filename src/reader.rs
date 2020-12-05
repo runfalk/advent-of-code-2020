@@ -11,13 +11,23 @@ where
     Ok(io::BufReader::new(File::open(filename)?).lines())
 }
 
-pub fn read_parsed_lines<P, T>(filename: P) -> Result<impl Iterator<Item = Result<T>>>
+pub fn read_mapped_lines<P, F, T, E>(path: P, f: F) -> Result<impl Iterator<Item = Result<T>>>
 where
     P: AsRef<Path>,
-    T: FromStr,
+    F: 'static + Fn(&str) -> Result<T, E>,
+    T: 'static,
+    anyhow::Error: From<E>,
+{
+    Ok(read_lines(path)?
+        .into_iter()
+        .map(move |l| -> Result<T> { Ok(f(&l?)?) }))
+}
+
+pub fn read_parsed_lines<P, T>(path: P) -> Result<impl Iterator<Item = Result<T>>>
+where
+    P: AsRef<Path>,
+    T: 'static + FromStr,
     anyhow::Error: From<T::Err>,
 {
-    Ok(read_lines(filename)?
-        .into_iter()
-        .map(|l| -> Result<T> { Ok(l?.parse()?) }))
+    read_mapped_lines(path, T::from_str)
 }
