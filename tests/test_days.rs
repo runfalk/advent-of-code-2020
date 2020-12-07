@@ -58,3 +58,12 @@ fn test_day6() -> Result<()> {
     );
     Ok(())
 }
+
+#[test]
+fn test_day7() -> Result<()> {
+    assert_eq!(
+        run_day(7, advent_of_code_2020::day7::main).unwrap(),
+        (238, Some(82930))
+    );
+    Ok(())
+}
