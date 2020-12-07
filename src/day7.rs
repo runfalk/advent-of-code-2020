@@ -24,13 +24,10 @@ fn parse_bag_color_with_count(bag_str: &str) -> Result<(usize, &str)> {
 }
 
 fn can_contain(bags: &HashMap<String, HashMap<String, usize>>, parent: &str, child: &str) -> bool {
-    if bags[parent].contains_key(child) {
-        return true;
-    } else {
-        for c in bags[parent].keys() {
-            if can_contain(bags, c, child) {
-                return true;
-            }
+    let bag = &bags[parent];
+    for inner_bag in bag.keys() {
+        if inner_bag == child || can_contain(bags, inner_bag, child) {
+            return true;
         }
     }
     false
@@ -38,8 +35,8 @@ fn can_contain(bags: &HashMap<String, HashMap<String, usize>>, parent: &str, chi
 
 fn num_bags_inside(bags: &HashMap<String, HashMap<String, usize>>, parent: &str) -> usize {
     let mut n = bags[parent].values().sum();
-    for (k, v) in bags[parent].iter() {
-        n += v * num_bags_inside(bags, k);
+    for (inner_bag, count) in bags[parent].iter() {
+        n += count * num_bags_inside(bags, inner_bag);
     }
     n
 }
@@ -49,28 +46,25 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
     for line in read_lines(path)? {
         let line = line?;
         let (bag, content) = split_once(&line[..line.len() - 1], " bags contain ");
-
-        bags.insert(
-            bag.to_owned(),
-            match content {
-                Some("no other bags") => HashMap::new(),
-                Some(bags_str) => {
-                    let mut inner_bags = HashMap::new();
-                    for sub_bag in bags_str.split(", ") {
-                        let (n, color) = parse_bag_color_with_count(sub_bag)?;
-                        inner_bags.insert(color.to_owned(), n);
-                    }
-                    inner_bags
+        let inner_bags = match content {
+            Some("no other bags") => HashMap::new(),
+            Some(bags_str) => {
+                let mut inner_bags = HashMap::new();
+                for inner_bag_str in bags_str.split(", ") {
+                    let (n, color) = parse_bag_color_with_count(inner_bag_str)?;
+                    inner_bags.insert(color.to_owned(), n);
                 }
-                None => {
-                    return Err(anyhow!("No"));
-                }
-            },
-        );
+                inner_bags
+            }
+            None => {
+                return Err(anyhow!("Invalid line, must contain ' bags contain '"));
+            }
+        };
+        bags.insert(bag.to_owned(), inner_bags);
     }
     Ok((
         bags.keys()
-            .filter(|x| can_contain(&bags, x, "shiny gold"))
+            .filter(|bag| can_contain(&bags, bag, "shiny gold"))
             .count(),
         Some(num_bags_inside(&bags, "shiny gold")),
     ))
