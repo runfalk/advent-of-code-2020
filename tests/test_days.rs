@@ -67,3 +67,20 @@ fn test_day7() -> Result<()> {
     );
     Ok(())
 }
+#[test]
+fn test_day8() -> Result<()> {
+    assert_eq!(
+        run_day(8, advent_of_code_2020::day8::main).unwrap(),
+        (1563, Some(767))
+    );
+    Ok(())
+}
+
+#[test]
+fn test_day9() -> Result<()> {
+    assert_eq!(
+        run_day(9, advent_of_code_2020::day9::main).unwrap(),
+        (530627549, Some(77730285))
+    );
+    Ok(())
+}
