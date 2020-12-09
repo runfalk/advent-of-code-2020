@@ -20,8 +20,7 @@ fn find_first_weak_number(input: &[u64], preamble_len: usize) -> Option<u64> {
 
 fn find_encryption_weakness(input: &[u64], weak_number: u64) -> Option<u64> {
     for window_size in 2..input.len() {
-        for start in 0..input.len() - window_size {
-            let window = &input[start..start + window_size];
+        for window in input.windows(window_size) {
             if weak_number == window.into_iter().sum() {
                 return window
                     .into_iter()
