@@ -50,10 +50,6 @@ impl Coord {
         CoordNeighbors::new_with_diagonals(*self)
     }
 
-    pub fn up(&self) -> Self {
-        self.offset(Up(1))
-    }
-
     pub fn offset(&self, dir: Direction) -> Self {
         match dir {
             Up(i) => Coord::new(self.x, self.y - i as isize),
@@ -109,6 +105,24 @@ impl Direction {
             Right(n) => *n,
             Down(n) => *n,
             Left(n) => *n,
+        }
+    }
+
+    pub fn turn_left(&self) -> Self {
+        match self {
+            Self::Up(n) => Self::Left(*n),
+            Self::Right(n) => Self::Up(*n),
+            Self::Down(n) => Self::Right(*n),
+            Self::Left(n) => Self::Down(*n),
+        }
+    }
+
+    pub fn turn_right(&self) -> Self {
+        match self {
+            Self::Up(n) => Self::Right(*n),
+            Self::Right(n) => Self::Down(*n),
+            Self::Down(n) => Self::Left(*n),
+            Self::Left(n) => Self::Up(*n),
         }
     }
 }
