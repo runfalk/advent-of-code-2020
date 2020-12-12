@@ -21,6 +21,7 @@ pub enum Direction {
 pub struct CoordNeighbors {
     origin: Coord,
     i: usize,
+    step: usize,
 }
 
 impl Coord {
@@ -43,6 +44,10 @@ impl Coord {
 
     pub fn iter_neighbors(&self) -> CoordNeighbors {
         CoordNeighbors::new(*self)
+    }
+
+    pub fn iter_all_neighbors(&self) -> CoordNeighbors {
+        CoordNeighbors::new_with_diagonals(*self)
     }
 
     pub fn up(&self) -> Self {
@@ -110,7 +115,19 @@ impl Direction {
 
 impl CoordNeighbors {
     pub fn new(origin: Coord) -> Self {
-        Self { origin, i: 0 }
+        Self {
+            origin,
+            i: 0,
+            step: 2,
+        }
+    }
+
+    pub fn new_with_diagonals(origin: Coord) -> Self {
+        Self {
+            origin,
+            i: 0,
+            step: 1,
+        }
     }
 }
 
@@ -120,12 +137,16 @@ impl Iterator for CoordNeighbors {
     fn next(&mut self) -> Option<Self::Item> {
         let output = match self.i {
             0 => Some(self.origin.offset(Up(1))),
-            1 => Some(self.origin.offset(Right(1))),
-            2 => Some(self.origin.offset(Down(1))),
-            3 => Some(self.origin.offset(Left(1))),
+            1 => Some(self.origin.offset(Up(1)).offset(Right(1))),
+            2 => Some(self.origin.offset(Right(1))),
+            3 => Some(self.origin.offset(Right(1)).offset(Down(1))),
+            4 => Some(self.origin.offset(Down(1))),
+            5 => Some(self.origin.offset(Down(1)).offset(Left(1))),
+            6 => Some(self.origin.offset(Left(1))),
+            7 => Some(self.origin.offset(Left(1)).offset(Up(1))),
             _ => None,
         };
-        self.i += 1;
+        self.i += self.step;
 
         output
     }
