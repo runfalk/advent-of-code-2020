@@ -74,7 +74,7 @@ fn part_a(actions: &[Action]) -> Result<usize> {
                 }
             }
             Action::Forward(n) => {
-                ship = ship.offset(dir.resize(*n));
+                ship.offset_mut(dir.resize(*n));
             }
         }
     }
