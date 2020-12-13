@@ -111,3 +111,12 @@ fn test_day12() -> Result<()> {
     );
     Ok(())
 }
+
+#[test]
+fn test_day13() -> Result<()> {
+    assert_eq!(
+        run_day(13, advent_of_code_2020::day13::main).unwrap(),
+        (4782, Some(1_118_684_865_113_056))
+    );
+    Ok(())
+}
