@@ -239,4 +239,21 @@ mod tests {
             ],
         );
     }
+
+    #[test]
+    fn test_all_neighbors() {
+        assert_eq!(
+            Coord::new(10, 10).iter_all_neighbors().collect::<Vec<_>>(),
+            vec![
+                Coord::new(10, 9),
+                Coord::new(11, 9),
+                Coord::new(11, 10),
+                Coord::new(11, 11),
+                Coord::new(10, 11),
+                Coord::new(9, 11),
+                Coord::new(9, 10),
+                Coord::new(9, 9),
+            ],
+        );
+    }
 }
