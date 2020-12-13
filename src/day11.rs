@@ -26,6 +26,7 @@ impl Layout {
         }
         Some(c.y as usize * self.width + c.x as usize % self.width)
     }
+
     fn get(&self, c: &Coord) -> Option<Tile> {
         let i = self.coord_to_index(c)?;
         self.tiles.get(i).map(|t| *t)

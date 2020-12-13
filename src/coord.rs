@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub};
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use self::Direction::*;
 
@@ -58,6 +58,10 @@ impl Coord {
             Left(i) => Coord::new(self.x - i as isize, self.y),
         }
     }
+
+    pub fn offset_mut(&mut self, dir: Direction) {
+        *self = self.offset(dir);
+    }
 }
 
 macro_rules! coord_op_overload {
@@ -84,10 +88,34 @@ macro_rules! coord_op_overload {
     };
 }
 
+macro_rules! coord_assign_op_overload {
+    ($a:ty, $b:ty) => {
+        impl AddAssign<$b> for $a {
+            fn add_assign(&mut self, other: $b) {
+                *self = Coord {
+                    x: self.x + other.x,
+                    y: self.y + other.y,
+                };
+            }
+        }
+
+        impl SubAssign<$b> for $a {
+            fn sub_assign(&mut self, other: $b) {
+                *self = Coord {
+                    x: self.x - other.x,
+                    y: self.y - other.y,
+                };
+            }
+        }
+    };
+}
+
 coord_op_overload!(Coord, Coord);
 coord_op_overload!(Coord, &Coord);
 coord_op_overload!(&Coord, Coord);
 coord_op_overload!(&Coord, &Coord);
+coord_assign_op_overload!(Coord, Coord);
+coord_assign_op_overload!(Coord, &Coord);
 
 impl Direction {
     pub fn resize(&self, len: usize) -> Direction {

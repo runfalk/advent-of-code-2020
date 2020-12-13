@@ -52,16 +52,16 @@ fn part_a(actions: &[Action]) -> Result<usize> {
     for action in actions {
         match action {
             Action::North(n) => {
-                ship = ship.offset(Direction::Up(*n));
+                ship.offset_mut(Direction::Up(*n));
             }
             Action::South(n) => {
-                ship = ship.offset(Direction::Down(*n));
+                ship.offset_mut(Direction::Down(*n));
             }
             Action::East(n) => {
-                ship = ship.offset(Direction::Right(*n));
+                ship.offset_mut(Direction::Right(*n));
             }
             Action::West(n) => {
-                ship = ship.offset(Direction::Left(*n));
+                ship.offset_mut(Direction::Left(*n));
             }
             Action::Left(n) => {
                 for _ in 0..*n {
@@ -87,16 +87,16 @@ fn part_b(actions: &[Action]) -> Result<usize> {
     for action in actions {
         match action {
             Action::North(n) => {
-                waypoint = waypoint.offset(Direction::Up(*n));
+                waypoint.offset_mut(Direction::Up(*n));
             }
             Action::South(n) => {
-                waypoint = waypoint.offset(Direction::Down(*n));
+                waypoint.offset_mut(Direction::Down(*n));
             }
             Action::East(n) => {
-                waypoint = waypoint.offset(Direction::Right(*n));
+                waypoint.offset_mut(Direction::Right(*n));
             }
             Action::West(n) => {
-                waypoint = waypoint.offset(Direction::Left(*n));
+                waypoint.offset_mut(Direction::Left(*n));
             }
             Action::Left(n) => {
                 for _ in 0..*n {
@@ -110,7 +110,7 @@ fn part_b(actions: &[Action]) -> Result<usize> {
             }
             Action::Forward(n) => {
                 for _ in 0..*n {
-                    ship = ship + waypoint;
+                    ship += waypoint;
                 }
             }
         }
