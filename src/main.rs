@@ -1,5 +1,6 @@
 use advent_of_code_2020::{
-    day1, day10, day11, day12, day13, day14, day15, day2, day3, day4, day5, day6, day7, day8, day9,
+    day1, day10, day11, day12, day13, day14, day15, day16, day2, day3, day4, day5, day6, day7,
+    day8, day9,
 };
 use anyhow::{anyhow, Result};
 use std::path::Path;
@@ -45,6 +46,7 @@ fn main() -> Result<()> {
         Ok(13) => as_result(day13::main(path.unwrap_or(&Path::new("data/day13.txt")))?),
         Ok(14) => as_result(day14::main(path.unwrap_or(&Path::new("data/day14.txt")))?),
         Ok(15) => as_result(day15::main(path.unwrap_or(&Path::new("data/day15.txt")))?),
+        Ok(16) => as_result(day16::main(path.unwrap_or(&Path::new("data/day16.txt")))?),
         Ok(1..=25) => return Err(anyhow!("No implementation for this day yet")),
         Ok(day) => return Err(anyhow!("Day {} is not a valid day for advent of code", day)),
         Err(_) => return Err(anyhow!("{:?} is not a valid day", args[1])),
