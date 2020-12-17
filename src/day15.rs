@@ -1,9 +1,6 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use std::collections::HashMap;
 use std::path::Path;
-use std::str::FromStr;
-
-use crate::reader::read_parsed_lines;
 
 fn find_nth_num(starting_numbers: &[usize], n: usize) -> usize {
     if n <= starting_numbers.len() {
