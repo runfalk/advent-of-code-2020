@@ -20,7 +20,9 @@ impl FromStr for Action {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let c = ACTION_RE.captures(s).ok_or(anyhow!("Invalid action"))?;
+        let c = ACTION_RE
+            .captures(s)
+            .ok_or_else(|| anyhow!("Invalid action {:?}", s))?;
         Ok(match &c[1] {
             "mask" => Action::Mask(
                 c[3].chars()
@@ -52,7 +54,7 @@ fn mask_addr(addr: usize, mask: &[Option<bool>]) -> String {
 
 fn replace_wildcards(masked_addr: &str) -> Vec<String> {
     let mut v = Vec::new();
-    if masked_addr.find("X").is_some() {
+    if masked_addr.find('X').is_some() {
         v.extend(replace_wildcards(&masked_addr.replacen("X", "0", 1)));
         v.extend(replace_wildcards(&masked_addr.replacen("X", "1", 1)));
     } else {
@@ -84,7 +86,7 @@ fn part_a(actions: &[Action]) -> u64 {
             }
         }
     }
-    memory.values().map(|v| *v).sum()
+    memory.values().copied().sum()
 }
 
 fn part_b(actions: &[Action]) -> u64 {
@@ -101,7 +103,7 @@ fn part_b(actions: &[Action]) -> u64 {
             }
         }
     }
-    memory.values().map(|v| *v).sum()
+    memory.values().copied().sum()
 }
 
 pub fn main(path: &Path) -> Result<(u64, Option<u64>)> {

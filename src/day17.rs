@@ -48,7 +48,7 @@ impl Coord for Coord3d {
     }
 
     fn min_max_bounds(cubes: &HashSet<Self>) -> Option<(Self, Self)> {
-        if cubes.len() == 0 {
+        if cubes.is_empty() {
             return None;
         }
 
@@ -85,7 +85,7 @@ impl Coord for Coord4d {
     }
 
     fn min_max_bounds(cubes: &HashSet<Self>) -> Option<(Self, Self)> {
-        if cubes.len() == 0 {
+        if cubes.is_empty() {
             return None;
         }
 

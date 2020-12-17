@@ -28,7 +28,7 @@ impl Layout {
 
     fn get(&self, c: &Coord) -> Option<Tile> {
         let i = self.coord_to_index(c)?;
-        self.tiles.get(i).map(|t| *t)
+        self.tiles.get(i).copied()
     }
 }
 
@@ -56,7 +56,9 @@ where
         for y in 0..layout.height {
             for x in 0..layout.width {
                 let c = Coord::new(x as isize, y as isize);
-                let tile = layout.get(&c).ok_or(anyhow!("Error"))?;
+                let tile = layout
+                    .get(&c)
+                    .ok_or_else(|| anyhow!("Coordinate {:?} not in layout", c))?;
                 let num_neighbors = num_neighbors(&layout, &c);
                 new_tiles.push(match tile {
                     Tile::Floor => Tile::Floor,

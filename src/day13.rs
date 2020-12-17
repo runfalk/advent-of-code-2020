@@ -5,10 +5,10 @@ use crate::reader::read_lines;
 
 fn part_a(bus_ids: &[(u64, u64)], departure_time: u64) -> Result<u64> {
     let (delay, bus_id) = bus_ids
-        .into_iter()
+        .iter()
         .map(|(_, bus_id)| (bus_id - (departure_time % bus_id), bus_id))
         .min()
-        .ok_or(anyhow!("No buses"))?;
+        .ok_or_else(|| anyhow!("No buses"))?;
     Ok(bus_id * delay)
 }
 
@@ -54,13 +54,13 @@ pub fn main(path: &Path) -> Result<(u64, Option<u64>)> {
     let departure_time: u64 = lines
         .next()
         .transpose()?
-        .ok_or(anyhow!("Unable to read first line of input"))?
+        .ok_or_else(|| anyhow!("Unable to read first line of input"))?
         .parse()?;
     let bus_ids = lines
         .next()
         .transpose()?
-        .ok_or(anyhow!("Unable to read second line of input"))?
-        .split(",")
+        .ok_or_else(|| anyhow!("Unable to read second line of input"))?
+        .split(',')
         .enumerate()
         .filter_map(|(i, id)| Some((i as u64, id.parse().ok()?)))
         .collect::<Vec<(u64, u64)>>();

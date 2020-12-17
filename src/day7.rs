@@ -16,10 +16,10 @@ fn split_once<'a>(s: &'a str, pat: &str) -> (&'a str, Option<&'a str>) {
 
 fn parse_bag_color_with_count(bag_str: &str) -> Result<(usize, &str)> {
     let (n_str, color_str) = split_once(bag_str, " ");
-    let color_str = color_str.ok_or(anyhow!("Invalid bag specification"))?;
+    let color_str = color_str.ok_or_else(|| anyhow!("Invalid bag specification"))?;
     let bag_idx = color_str
         .rfind(" bag")
-        .ok_or(anyhow!("Bag specification must end with bag(s)"))?;
+        .ok_or_else(|| anyhow!("Bag specification must end with bag(s)"))?;
     Ok((n_str.parse()?, &color_str[..bag_idx]))
 }
 

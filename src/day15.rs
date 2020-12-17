@@ -8,8 +8,8 @@ fn find_nth_num(starting_numbers: &[usize], n: usize) -> usize {
     }
 
     let mut last_spoken = HashMap::new();
-    for (i, v) in starting_numbers.into_iter().enumerate() {
-        last_spoken.insert(*v, i);
+    for (i, &v) in starting_numbers.iter().enumerate() {
+        last_spoken.insert(v, i);
     }
 
     let mut next_num = 0;
@@ -27,7 +27,7 @@ fn find_nth_num(starting_numbers: &[usize], n: usize) -> usize {
 pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
     let starting_numbers = std::fs::read_to_string(path)?
         .trim_end()
-        .split(",")
+        .split(',')
         .map(|i| Ok(i.parse::<usize>()?))
         .collect::<Result<Vec<_>>>()?;
 

@@ -32,7 +32,11 @@ impl FromStr for Action {
     type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self> {
         Ok(
-            match s.chars().next().ok_or(anyhow!("Invalid line, empty"))? {
+            match s
+                .chars()
+                .next()
+                .ok_or_else(|| anyhow!("Invalid line, empty"))?
+            {
                 'N' => Action::North(s[1..].parse()?),
                 'S' => Action::South(s[1..].parse()?),
                 'E' => Action::East(s[1..].parse()?),

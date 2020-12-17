@@ -19,7 +19,7 @@ fn valid_rules(
 }
 
 fn parse_ticket(line: &str) -> Result<Vec<usize>> {
-    line.split(",")
+    line.split(',')
         .map(|n| -> Result<_> { Ok(n.parse()?) })
         .collect()
 }
@@ -44,7 +44,7 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
     for rule_str in rules_str.lines() {
         let c = rule_re
             .captures(rule_str)
-            .ok_or(anyhow!("Invalid rule {:?}", rule_str))?;
+            .ok_or_else(|| anyhow!("Invalid rule {:?}", rule_str))?;
         rules.insert(
             c[1].to_owned(),
             (c[2].parse()?..=c[3].parse()?, c[4].parse()?..=c[5].parse()?),
@@ -66,7 +66,7 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
     for ticket in nearby_tickets {
         for (i, field) in ticket.into_iter().enumerate() {
             let possible_rules = valid_rules(&rules, field);
-            if possible_rules.len() == 0 {
+            if possible_rules.is_empty() {
                 num_invalid_tickets += field;
             } else {
                 possible_rules_by_slot[i].retain(|f| possible_rules.contains(f));
@@ -104,12 +104,11 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
     // Translate the nested slot -> set structure to a list of rule names
     let rules_by_slot = possible_rules_by_slot
         .into_iter()
-        .map(|f| f.into_iter().next().unwrap())
-        .collect::<Vec<_>>();
+        .map(|f| f.into_iter().next().unwrap());
 
     let part_b = my_ticket
         .into_iter()
-        .zip(rules_by_slot.into_iter())
+        .zip(rules_by_slot)
         .filter_map(|(value, rule)| {
             if rule.starts_with("departure") {
                 Some(value)
@@ -117,7 +116,7 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
                 None
             }
         })
-        .fold(1, |product, value| product * value);
+        .product();
 
     Ok((num_invalid_tickets, Some(part_b)))
 }

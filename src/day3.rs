@@ -27,8 +27,8 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
     let part_a = num_trees_encountered(&map, 3, 1);
 
     let mut part_b = part_a;
-    for (x_step, y_step) in vec![(1, 1), (5, 1), (7, 1), (1, 2)] {
-        part_b *= num_trees_encountered(&map, x_step, y_step);
+    for (x_step, y_step) in &[(1, 1), (5, 1), (7, 1), (1, 2)] {
+        part_b *= num_trees_encountered(&map, *x_step, *y_step);
     }
 
     Ok((part_a, Some(part_b)))

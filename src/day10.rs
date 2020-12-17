@@ -7,7 +7,7 @@ use crate::reader::read_parsed_lines;
 fn solve(mut input: Vec<usize>) -> (usize, Option<u128>) {
     // Add charging outlet and built-in adapter
     input.push(0);
-    input.sort();
+    input.sort_unstable();
     let built_in_adapter = input.last().unwrap() + 3;
     input.push(built_in_adapter);
 

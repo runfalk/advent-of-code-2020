@@ -18,7 +18,10 @@ fn seat_spec_to_id(seat: &str) -> Result<usize> {
 
 pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
     let mut seat_ids = read_mapped_lines(path, seat_spec_to_id)?;
-    let mut min = seat_ids.next().transpose()?.ok_or(anyhow!("No seat IDs"))?;
+    let mut min = seat_ids
+        .next()
+        .transpose()?
+        .ok_or_else(|| anyhow!("No seat IDs"))?;
     let mut max = min;
     let mut sum = min;
 

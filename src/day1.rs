@@ -10,7 +10,7 @@ fn find_product_2020(entries: &[usize], num_entries: usize) -> Result<usize> {
         // Check if the selection sums up to 2020
         if selection.iter().cloned().sum::<usize>() == 2020 {
             // Return the product of the selection
-            return Ok(selection.into_iter().fold(1, |p, f| p * f));
+            return Ok(selection.into_iter().product());
         }
     }
     Err(anyhow!("No matching entries"))

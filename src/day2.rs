@@ -36,7 +36,7 @@ impl FromStr for PasswordEntry {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let captures = ROW_RE
             .captures(s)
-            .ok_or(anyhow!("String doesn't match policy with password"))?;
+            .ok_or_else(|| anyhow!("String doesn't match policy with password"))?;
         Ok(Self {
             first: captures[1].parse()?,
             second: captures[2].parse()?,

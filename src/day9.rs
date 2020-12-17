@@ -8,7 +8,7 @@ fn find_first_weak_number(input: &[u64], preamble_len: usize) -> Option<u64> {
     for i in 0..input.len() - preamble_len {
         let curr = input[i + preamble_len];
         let is_weak_number = input[i..i + preamble_len]
-            .into_iter()
+            .iter()
             .tuple_combinations()
             .all(|(&a, &b)| a + b != curr);
         if is_weak_number {
@@ -21,12 +21,8 @@ fn find_first_weak_number(input: &[u64], preamble_len: usize) -> Option<u64> {
 fn find_encryption_weakness(input: &[u64], weak_number: u64) -> Option<u64> {
     for window_size in 2..input.len() {
         for window in input.windows(window_size) {
-            if weak_number == window.into_iter().sum() {
-                return window
-                    .into_iter()
-                    .minmax()
-                    .into_option()
-                    .map(|(&a, &b)| a + b);
+            if weak_number == window.iter().sum() {
+                return window.iter().minmax().into_option().map(|(&a, &b)| a + b);
             }
         }
     }
@@ -37,7 +33,7 @@ pub fn main(path: &Path) -> Result<(u64, Option<u64>)> {
     let preamble_len = 25usize;
     let input = read_parsed_lines(path)?.collect::<Result<Vec<u64>>>()?;
     let weak_number = find_first_weak_number(&input, preamble_len)
-        .ok_or(anyhow!("Unable to find a weak number in the given input"))?;
+        .ok_or_else(|| anyhow!("Unable to find a weak number in the given input"))?;
     Ok((weak_number, find_encryption_weakness(&input, weak_number)))
 }
 
