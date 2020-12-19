@@ -43,6 +43,16 @@ where
     read_mapped_lines(path, T::from_str)
 }
 
+/// Split the string at the given separator. If the separator is not found, the
+/// second part of the tuple will be None.
+pub fn split_once<'a>(s: &'a str, pat: &str) -> (&'a str, Option<&'a str>) {
+    let del_len = pat.len();
+    match s.find(pat) {
+        Some(i) => (&s[..i], Some(&s[i + del_len..])),
+        None => (s, None),
+    }
+}
+
 impl Grid {
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Grid> {
         let mut width = 0;

@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::path::Path;
 use std::str::FromStr;
 
-use crate::reader::read_parsed_lines;
+use crate::reader::{read_parsed_lines, split_once};
 
 #[derive(Debug, Clone)]
 enum Instruction {
@@ -38,14 +38,6 @@ impl FromStr for Instruction {
             ("nop", Some(i_str)) => Ok(Instruction::Nop(i_str.parse()?)),
             _ => Err(anyhow!("Invalid instruction {:?}", s)),
         }
-    }
-}
-
-fn split_once<'a>(s: &'a str, pat: &str) -> (&'a str, Option<&'a str>) {
-    let del_len = pat.len();
-    match s.find(pat) {
-        Some(i) => (&s[..i], Some(&s[i + del_len..])),
-        None => (s, None),
     }
 }
 

@@ -2,17 +2,7 @@ use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::reader::read_lines;
-
-/// Split the string at the given separator. If the separator is not found, the
-/// second part of the tuple will be None.
-fn split_once<'a>(s: &'a str, pat: &str) -> (&'a str, Option<&'a str>) {
-    let del_len = pat.len();
-    match s.find(pat) {
-        Some(i) => (&s[..i], Some(&s[i + del_len..])),
-        None => (s, None),
-    }
-}
+use crate::reader::{read_lines, split_once};
 
 fn parse_bag_color_with_count(bag_str: &str) -> Result<(usize, &str)> {
     let (n_str, color_str) = split_once(bag_str, " ");
