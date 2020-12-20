@@ -32,52 +32,6 @@ impl Piece {
         }
     }
 
-    /// Generate all possible orientations of a this piece
-    fn all_orientations(self) -> Vec<Self> {
-        // There are 8 different ways of transforming a piece. Any combination of these operations:
-        // - Transposing
-        // - Flipping horizontally
-        // - Flipping vertically
-        let mut orientations = Vec::new();
-        for i in 0..8 {
-            let transpose = (i >> 2) == 1;
-            let flip_x = (i >> 1) & 1 == 1;
-            let flip_y = i & 1 == 1;
-
-            let Self {
-                mut top,
-                mut left,
-                mut right,
-                mut bottom,
-            } = self.clone();
-
-            if transpose {
-                std::mem::swap(&mut top, &mut left);
-                std::mem::swap(&mut right, &mut bottom);
-            }
-
-            if flip_x {
-                top.reverse();
-                bottom.reverse();
-                std::mem::swap(&mut left, &mut right);
-            }
-
-            if flip_y {
-                left.reverse();
-                right.reverse();
-                std::mem::swap(&mut top, &mut bottom);
-            }
-
-            orientations.push(Self {
-                top,
-                left,
-                right,
-                bottom,
-            });
-        }
-        orientations
-    }
-
     /// Returns a tuple that shows where this piece fits with the other one
     fn fits_with(&self, other: &Self) -> (bool, bool, bool, bool) {
         let top = self.top == other.bottom;
@@ -86,6 +40,81 @@ impl Piece {
         let bottom = self.bottom == other.top;
         (top, left, right, bottom)
     }
+}
+
+fn all_matrix_transforms(matrix: &[Vec<bool>]) -> Vec<Vec<Vec<bool>>> {
+    let mut matrices = Vec::new();
+
+    for i in 0..8 {
+        let mut matrix = matrix.to_owned();
+
+        let transpose = (i >> 2) == 1;
+        let flip_x = (i >> 1) & 1 == 1;
+        let flip_y = i & 1 == 1;
+
+        if transpose {
+            let mut new_matrix = Vec::new();
+            for y in 0..matrix[0].len() {
+                let mut row = Vec::new();
+                #[allow(clippy::needless_range_loop)]
+                for x in 0..matrix.len() {
+                    row.push(matrix[x][y]);
+                }
+                new_matrix.push(row);
+            }
+            matrix = new_matrix;
+        }
+
+        if flip_x {
+            for row in matrix.iter_mut() {
+                row.reverse();
+            }
+        }
+
+        if flip_y {
+            matrix.reverse();
+        }
+
+        matrices.push(matrix);
+    }
+    matrices
+}
+
+fn num_non_sea_monster_pixels(image: &[bool], width: usize, height: usize) -> usize {
+    // The sea monster pattern looks like this. We translate it to the correct offsets
+    //                   #
+    // #    ##    ##    ###
+    //  #  #  #  #  #  #
+    let sea_monster_pattern = &[
+        18,
+        width,
+        width + 5,
+        width + 6,
+        width + 11,
+        width + 12,
+        width + 17,
+        width + 18,
+        width + 19,
+        2 * width + 1,
+        2 * width + 4,
+        2 * width + 7,
+        2 * width + 10,
+        2 * width + 13,
+        2 * width + 16,
+    ];
+    let mut sea_monster_offsets = HashSet::new();
+    for y in 0..height - 2 {
+        for x in 0..width - 19 {
+            let offset_base = y * width + x;
+            let aligned_offsets = sea_monster_pattern
+                .iter()
+                .map(|offset| offset_base + offset);
+            if aligned_offsets.clone().all(|offset| image[offset]) {
+                sea_monster_offsets.extend(aligned_offsets);
+            }
+        }
+    }
+    image.iter().filter(|&v| *v).count() - sea_monster_offsets.len()
 }
 
 pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
@@ -100,7 +129,7 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
             let matrix = lines
                 .map(|line| line.chars().map(|c| c == '#').collect::<Vec<_>>())
                 .collect::<Vec<_>>();
-            Ok((id, matrix))
+            Ok((id, all_matrix_transforms(&matrix)))
         })
         .collect::<Result<HashMap<_, _>>>()?;
 
@@ -108,7 +137,15 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
     // edges and provide some convenience methods to check if two variations fit together.
     let pieces = piece_matrices
         .iter()
-        .map(|(id, matrix)| (*id, Piece::from_matrix(matrix).all_orientations()))
+        .map(|(id, matrices)| {
+            (
+                *id,
+                matrices
+                    .iter()
+                    .map(|matrix| Piece::from_matrix(matrix))
+                    .collect::<Vec<_>>(),
+            )
+        })
         .collect::<HashMap<_, _>>();
 
     // The image is square, so we can calculate the number of tiles per side in advance
@@ -171,18 +208,17 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
 
     // Search for possible tile configurations depth first by appending tiles to the right. If the
     // current tile it on the right hand side we check the tile below the start of the current row.
-    let mut part_a = None;
+    let mut tile_configuration = None;
     while !queue.is_empty() {
         let (used_pieces, locations) = queue.pop().unwrap();
 
         // Check if we have managed to place all tiles
         if locations.len() == pieces.len() {
-            part_a = Some(
-                locations[0]
-                    * locations[side - 1]
-                    * locations[locations.len() - side]
-                    * locations[locations.len() - 1],
-            );
+            let tiles = locations
+                .into_iter()
+                .map(|id| (id, used_pieces[&id]))
+                .collect::<Vec<_>>();
+            tile_configuration = Some(tiles);
             break;
         }
 
@@ -215,8 +251,47 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
         }
     }
 
-    Ok((
-        part_a.ok_or_else(|| anyhow!("No valid configuration of tiles found"))?,
-        None,
-    ))
+    // Use the configuration of tiles to find the product of the corner tile IDs
+    let tile_configuration =
+        tile_configuration.ok_or_else(|| anyhow!("No valid configuration of tiles found"))?;
+    let part_a = tile_configuration[0].0
+        * tile_configuration[side - 1].0
+        * tile_configuration[tile_configuration.len() - side].0
+        * tile_configuration[tile_configuration.len() - 1].0;
+
+    // Allocate all rows in the matrix that holds the final image with all borders between tiles
+    // removed
+    let tile_side = piece_matrices.values().next().unwrap()[0].len() - 2;
+    let mut full_image = Vec::new();
+    for _ in 0..side * tile_side {
+        full_image.push(Vec::with_capacity(side * tile_side));
+    }
+
+    // Fill final image with pixel values
+    for (i, (id, variant)) in tile_configuration.into_iter().enumerate() {
+        let tile_y = i / side;
+        for (j, row) in piece_matrices[&id][variant]
+            .iter()
+            .skip(1)
+            .take(tile_side)
+            .enumerate()
+        {
+            full_image[tile_y * tile_side + j].extend(row.iter().skip(1).take(tile_side).copied());
+        }
+    }
+
+    // Try all different transformations of final image, since it may be flipped incorrectly for
+    // detecting sea monsters
+    let mut part_b = usize::MAX;
+    for image_variant in all_matrix_transforms(&full_image) {
+        let width = side * tile_side;
+        let pixels = image_variant
+            .into_iter()
+            .map(|line| line.into_iter())
+            .flatten()
+            .collect::<Vec<_>>();
+        part_b = part_b.min(num_non_sea_monster_pixels(&pixels, width, width));
+    }
+
+    Ok((part_a, Some(part_b)))
 }
