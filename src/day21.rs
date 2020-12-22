@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crate::reader::{read_lines, split_once};
 
-pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
+pub fn main(path: &Path) -> Result<(usize, Option<String>)> {
     let foods = read_lines(path)?
         .map(|l| -> Result<(HashSet<String>, HashSet<String>)> {
             let line = l?;
@@ -48,5 +48,41 @@ pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
         .filter(|(ingredient, _)| !ingredients_with_allergenes.contains(ingredient))
         .map(|(_, n)| n)
         .sum();
-    Ok((part_a, None))
+
+    // NOTE: This calculation will get stuck in an infinite loop if there are mutliple solutions,
+    //       but the input is nice so we don't have to worry about that
+    loop {
+        let mut assigned_ingredients = HashSet::new();
+        assigned_ingredients.extend(
+            allergenes_to_ingredients
+                .iter()
+                .filter(|(_, v)| v.len() == 1)
+                .map(|(_, v)| v.iter().next().unwrap().to_owned()),
+        );
+
+        if assigned_ingredients.len() == allergenes_to_ingredients.len() {
+            break;
+        }
+
+        for (_, ingredients) in allergenes_to_ingredients.iter_mut() {
+            if ingredients.len() == 1 {
+                continue;
+            }
+            ingredients.retain(|ingredient| !assigned_ingredients.contains(ingredient));
+        }
+    }
+
+    // Do some post processing to get the solution on the correct form
+    let mut part_b_list = allergenes_to_ingredients
+        .into_iter()
+        .map(|(k, v)| (k, v.into_iter().next().unwrap()))
+        .collect::<Vec<_>>();
+    part_b_list.sort_unstable();
+    let part_b = part_b_list
+        .into_iter()
+        .map(|(_, v)| v)
+        .collect::<Vec<_>>()
+        .join(",");
+
+    Ok((part_a, Some(part_b)))
 }

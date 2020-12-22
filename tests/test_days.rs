@@ -186,6 +186,12 @@ fn test_day20() -> Result<()> {
 
 #[test]
 fn test_day21() -> Result<()> {
-    assert_eq!(run_day(21, advent_of_code_2020::day21::main)?, (2412, None));
+    assert_eq!(
+        run_day(21, advent_of_code_2020::day21::main)?,
+        (
+            2412,
+            Some("mfp,mgvfmvp,nhdjth,hcdchl,dvkbjh,dcvrf,bcjz,mhnrqp".to_owned())
+        )
+    );
     Ok(())
 }
