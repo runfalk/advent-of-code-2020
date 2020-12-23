@@ -204,3 +204,12 @@ fn test_day22() -> Result<()> {
     );
     Ok(())
 }
+
+#[test]
+fn test_day23() -> Result<()> {
+    assert_eq!(
+        run_day(23, advent_of_code_2020::day23::main)?,
+        ("95648732".to_owned(), Some(192515314252))
+    );
+    Ok(())
+}
