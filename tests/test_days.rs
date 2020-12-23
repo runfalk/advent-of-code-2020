@@ -200,7 +200,7 @@ fn test_day21() -> Result<()> {
 fn test_day22() -> Result<()> {
     assert_eq!(
         run_day(22, advent_of_code_2020::day22::main)?,
-        (32448, None,)
+        (32448, Some(32949))
     );
     Ok(())
 }
