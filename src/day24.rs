@@ -1,5 +1,4 @@
-use anyhow::Result;
-use regex::Regex;
+use anyhow::{anyhow, Result};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
@@ -12,7 +11,7 @@ struct HexCoord {
     z: isize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 enum Step {
     Nw,
     Ne,
@@ -67,19 +66,34 @@ impl HexCoord {
 }
 
 fn parse_steps(s: &str) -> Result<Vec<Step>> {
-    let step_re = Regex::new(r"[sn]?[ew]").unwrap();
-    Ok(step_re
-        .captures_iter(s)
-        .map(|c| match &c[0] {
-            "nw" => Step::Nw,
-            "ne" => Step::Ne,
-            "e" => Step::E,
-            "se" => Step::Se,
-            "sw" => Step::Sw,
-            "w" => Step::W,
-            _ => unreachable!(),
-        })
-        .collect())
+    let mut out = Vec::new();
+    let chars = s.chars().collect::<Vec<_>>();
+    let mut it = 0..s.len();
+    while let Some(i) = it.next() {
+        let step = match (chars[i], chars.get(i + 1).copied()) {
+            ('n', Some('w')) => {
+                it.next();
+                Step::Nw
+            }
+            ('n', Some('e')) => {
+                it.next();
+                Step::Ne
+            }
+            ('e', _) => Step::E,
+            ('s', Some('e')) => {
+                it.next();
+                Step::Se
+            }
+            ('s', Some('w')) => {
+                it.next();
+                Step::Sw
+            }
+            ('w', _) => Step::W,
+            (c, _) => return Err(anyhow!("Unexpected direction {:?}", c)),
+        };
+        out.push(step);
+    }
+    Ok(out)
 }
 
 pub fn main(path: &Path) -> Result<(usize, Option<usize>)> {
